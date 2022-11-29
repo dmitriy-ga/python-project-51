@@ -1,9 +1,15 @@
 [tool.poetry]
 name = "hexlet-code"
 version = "0.1.0"
-description = ""
+description = "CLI-tool for downloading web pages for local viewing"
 authors = ["dmitriy-ga <Dmitriy2243@yandex.ru>"]
 readme = "README.md"
+classifiers = [
+  "Programming Language :: Python",
+  "Environment :: Console",
+  "Topic :: Internet",
+  "Topic :: Utilities"
+]
 packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
@@ -21,3 +27,6 @@ requests-mock = "^1.10.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+page-loader = "src.scripts.page_loader_start:main"
