@@ -42,8 +42,8 @@ def mock_request_img(address, img_address,
 
 
 def test_download_img(htmlpic_simple, pic_simple) -> None:
-    test_address: str = 'mock://testdownload.net/imgpage'
-    img_address: str = 'mock://testdownload.net/imgpage/examplepic.jpg'
+    test_address: str = 'https://testdownload.net/imgpage'
+    img_address: str = 'https://testdownload.net/examplepic.jpg'
 
     with tempfile.TemporaryDirectory() as d:
         print(f'Created temporary folder {d}')

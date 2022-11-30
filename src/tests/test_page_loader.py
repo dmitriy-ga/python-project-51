@@ -27,7 +27,7 @@ def mock_request_text(address, fixture, directory):
 
 
 def test_download(text_simple) -> None:
-    test_address: str = 'mock://testdownload.net/page'
+    test_address: str = 'https://testdownload.net/page'
     test_name: str = 'testdownload-net-page.html'
 
     with tempfile.TemporaryDirectory() as d:
