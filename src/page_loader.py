@@ -40,7 +40,7 @@ def name_output_file(url) -> str:
     for symbol in unwanted_symbols:
         if symbol in parsed_url:
             parsed_url = parsed_url.replace(symbol, dash)
-    return parsed_url
+    return parsed_url.rstrip(dash)
 
 
 def download(url, output_path) -> str:
@@ -48,7 +48,8 @@ def download(url, output_path) -> str:
     soup = BeautifulSoup(response, 'html.parser')
 
     url_names: NamedTuple = build_urlinfo(url, output_path)
-    os.mkdir(url_names.directory_full_path)
+    if not os.path.exists(url_names.directory_full_path):
+        os.mkdir(url_names.directory_full_path)
 
     images = soup.find_all(IMG)
     link_resources = soup.find_all(LINK)
