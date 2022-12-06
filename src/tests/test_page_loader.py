@@ -3,6 +3,7 @@ import requests_mock
 import pytest
 import tempfile
 import os
+import logging
 
 
 @pytest.fixture
@@ -22,16 +23,16 @@ def mock_request_text(address, fixture, directory):
     with requests_mock.Mocker() as m:
         m.get(address, text=fixture)
         received_mock_path: str = download(address, directory)
-    print(f'File saved at {received_mock_path}')
     return received_mock_path
 
 
-def test_download(text_simple) -> None:
+def test_download(caplog, text_simple) -> None:
+    caplog.set_level(logging.DEBUG)
     test_address: str = 'https://testdownload.net/page'
     test_name: str = 'testdownload-net-page.html'
 
     with tempfile.TemporaryDirectory() as d:
-        print(f'Created temporary folder {d}')
+        logging.debug(f'Created temporary folder {d}')
 
         received_mock_path: str = mock_request_text(test_address,
                                                     text_simple,

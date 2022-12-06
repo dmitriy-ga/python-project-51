@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 from typing import NamedTuple
+import logging
 
 
 HREF = 'href'
@@ -29,6 +30,10 @@ def build_urlinfo(url, output_path) -> NamedTuple:
     host_url: str = urlparse(url).netloc
     directory_full_path: str = os.path.join(output_path, folder_name)
     html_full_path: str = os.path.join(output_path, html_name)
+    logging.debug(f'Building urlinfo:'
+                  f'{base_name=}, {html_name=}'
+                  f'{folder_name=}, {host_url=},'
+                  f'{directory_full_path=}, {html_full_path=}')
     return UrlInfo(html_name, folder_name, host_url, directory_full_path,
                    html_full_path)
 
@@ -40,7 +45,9 @@ def name_output_file(url) -> str:
     for symbol in unwanted_symbols:
         if symbol in parsed_url:
             parsed_url = parsed_url.replace(symbol, dash)
-    return parsed_url.rstrip(dash)
+    parsed_url = parsed_url.rstrip(dash)
+    logging.debug(f'For {url} generated name {parsed_url}')
+    return parsed_url
 
 
 def download(url, output_path) -> str:
@@ -49,6 +56,7 @@ def download(url, output_path) -> str:
 
     url_names: NamedTuple = build_urlinfo(url, output_path)
     if not os.path.exists(url_names.directory_full_path):
+        logging.info(f'Creating folder {url_names.directory_full_path}')
         os.mkdir(url_names.directory_full_path)
 
     images = soup.find_all(IMG)
@@ -62,13 +70,16 @@ def download(url, output_path) -> str:
         item_host: str = urlparse(item[item_url_index]).netloc
         # Checking same host of item
         if not item_host == '' and not item_host == url_names.host_url:
+            logging.info(f'{item} skipped, non-same host')
             continue
         name: str = os.path.basename(item[item_url_index])
         name_extension: str = os.path.splitext(name)[extension_index]
 
         # Checking link for HTML page
         if item.name == LINK and any((not name, not name_extension)):
+            logging.debug(f'Renaming {name}...')
             name: str = name_output_file(item[item_url_index]) + '.html'
+            logging.debug(f'...to {name}')
 
         full_name: str = os.path.join(url_names.folder_name, name)
 
@@ -80,9 +91,11 @@ def download(url, output_path) -> str:
         # Updating local HTML file for new address
         item[item_url_index] = full_name
 
+        logging.debug(f'Saving resource {name}')
         with open(os.path.join(output_path, full_name), write_mode) as file:
             file.write(item_content)
 
+    logging.debug(f'Saving HTML page {url_names.html_name}')
     with open(url_names.html_full_path, W) as file:
         file.write(soup.prettify())
     return url_names.html_full_path
