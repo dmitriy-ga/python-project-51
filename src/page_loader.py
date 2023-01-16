@@ -51,13 +51,30 @@ def name_output_file(url) -> str:
 
 
 def download(url, output_path) -> str:
-    response: str = requests.get(url).text
-    soup = BeautifulSoup(response, 'html.parser')
+    if not os.path.exists(output_path):
+        logging.error(f'{output_path} does not exist')
+        raise ValueError
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as error:
+        logging.error(f'Unable to get the page, got response {error}')
+        raise requests.exceptions.HTTPError
+    except requests.exceptions.RequestException as error:
+        logging.error(f'Unable to connect, error: {error}')
+        raise requests.exceptions.RequestException
+
+    soup = BeautifulSoup(response.text, 'html.parser')
 
     url_names: NamedTuple = build_urlinfo(url, output_path)
     if not os.path.exists(url_names.directory_full_path):
         logging.info(f'Creating folder {url_names.directory_full_path}')
-        os.mkdir(url_names.directory_full_path)
+        try:
+            os.mkdir(url_names.directory_full_path)
+        except OSError:
+            logging.error(f'Unable create folder at {output_path}')
+            raise OSError
 
     images = soup.find_all(IMG)
     link_resources = soup.find_all(LINK)
