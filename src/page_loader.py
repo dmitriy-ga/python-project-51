@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 from typing import NamedTuple
 import logging
+from progress.bar import Bar
 
 
 HREF = 'href'
@@ -119,7 +120,9 @@ def download(url, output_path) -> str:
     link_resources = soup.find_all(LINK)
     script_resources = soup.find_all(SCRIPT, src=True)
 
-    for item in images + script_resources + link_resources:
+    for item in Bar('Downloading').iter(
+            images + script_resources + link_resources):
+
         item_names = build_iteminfo(item)
 
         # Checking same host of item
