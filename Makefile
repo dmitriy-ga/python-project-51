@@ -14,7 +14,7 @@ test-coverage:
 	poetry run pytest --cov=src --cov-report xml
 
 test-coverage-info:
-	poetry run pytest --cov=src src/tests/
+	poetry run pytest --cov-report term-missing --cov=src src/tests/
 
 selfcheck:
 	poetry check
