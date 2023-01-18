@@ -63,20 +63,33 @@ def build_iteminfo(item):
         logging.debug(f'Renaming {name}...')
         name: str = name_output_file(item[item_url_index]) + '.html'
         logging.debug(f'...to {name}')
+    else:
+        name = name_resource_file(name)
     return ItemInfo(item_url_index, write_mode, tag_type,
                     item_host, name, name_extension)
 
 
 def name_output_file(url) -> str:
-    unwanted_symbols = ('/', '.')
-    dash = '-'
     parsed_url = ''.join(urlparse(url)[1:3])
-    for symbol in unwanted_symbols:
-        if symbol in parsed_url:
-            parsed_url = parsed_url.replace(symbol, dash)
-    parsed_url = parsed_url.rstrip(dash)
+    parsed_url = normalize_name(parsed_url)
     logging.debug(f'For {url} generated name {parsed_url}')
     return parsed_url
+
+
+def name_resource_file(input_name):
+    name, extension = os.path.splitext(input_name)
+    name = normalize_name(name)
+    return ''.join((name, extension))
+
+
+def normalize_name(input_name):
+    unwanted_symbols = ('/', '.', '_')
+    dash = '-'
+    for symbol in unwanted_symbols:
+        if symbol in input_name:
+            input_name = input_name.replace(symbol, dash)
+    input_name = input_name.rstrip(dash)
+    return input_name
 
 
 def check_folder_exist(folder_path: str) -> None:

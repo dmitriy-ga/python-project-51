@@ -60,12 +60,12 @@ def test_download_items(caplog, htmlitems_simple, link_simple, script_simple):
 
         mock_request_items(address_info, link_info, script_info, d)
 
-        link_path: str = 'testdownload-net-itemspage_files/example_link.css'
+        link_path: str = 'testdownload-net-itemspage_files/example-link.css'
         link_path: str = os.path.join(d, link_path)
         received_mock: str = read_file(link_path)
         assert received_mock == link_simple
 
-        script_path: str = 'testdownload-net-itemspage_files/empty_script.js'
+        script_path: str = 'testdownload-net-itemspage_files/empty-script.js'
         script_path: str = os.path.join(d, script_path)
         received_mock: str = read_file(script_path)
         assert received_mock == script_simple
