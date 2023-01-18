@@ -1,6 +1,8 @@
 import argparse
 import os
 from src.page_loader import download
+import logging
+import sys
 
 
 def main() -> None:
@@ -17,7 +19,11 @@ def main() -> None:
     output = args.output
     url = args.url
 
-    print(download(url, output))
+    try:
+        print(download(url, output))
+    except Exception:
+        logging.error('Unable download page')
+        sys.exit(1)
 
 
 if __name__ == '__main__':
