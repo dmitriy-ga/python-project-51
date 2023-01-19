@@ -34,7 +34,7 @@ class ItemInfo(NamedTuple):
     name_ext: str
 
 
-def build_urlinfo(url, output_path) -> NamedTuple:
+def build_urlinfo(url: str, output_path: str) -> UrlInfo:
     base_name: str = name_output_file(url)
     html_name: str = base_name + '.html'
     folder_name: str = base_name + '_files'
@@ -49,7 +49,7 @@ def build_urlinfo(url, output_path) -> NamedTuple:
                    html_full_path)
 
 
-def build_iteminfo(item):
+def build_iteminfo(item) -> ItemInfo:
     item_url_index: str = HREF if item.name == LINK else SRC
     write_mode: str = WB if item.name == IMG else W
     tag_type: str = item.name
@@ -64,31 +64,31 @@ def build_iteminfo(item):
         name: str = name_output_file(item[item_url_index]) + '.html'
         logging.debug(f'...to {name}')
     else:
-        name = name_resource_file(name)
+        name: str = name_resource_file(name)
     return ItemInfo(item_url_index, write_mode, tag_type,
                     item_host, name, name_extension)
 
 
-def name_output_file(url) -> str:
-    parsed_url = ''.join(urlparse(url)[1:3])
-    parsed_url = normalize_name(parsed_url)
+def name_output_file(url: str) -> str:
+    parsed_url: str = ''.join(urlparse(url)[1:3])
+    parsed_url: str = normalize_name(parsed_url)
     logging.debug(f'For {url} generated name {parsed_url}')
     return parsed_url
 
 
-def name_resource_file(input_name):
+def name_resource_file(input_name: str) -> str:
     name, extension = os.path.splitext(input_name)
-    name = normalize_name(name)
+    name: str = normalize_name(name)
     return ''.join((name, extension))
 
 
-def normalize_name(input_name):
-    unwanted_symbols = ('/', '.', '_')
-    dash = '-'
+def normalize_name(input_name: str) -> str:
+    unwanted_symbols: tuple = ('/', '.', '_')
+    dash: str = '-'
     for symbol in unwanted_symbols:
         if symbol in input_name:
             input_name = input_name.replace(symbol, dash)
-    input_name = input_name.rstrip(dash)
+    input_name: str = input_name.rstrip(dash)
     return input_name
 
 
@@ -98,9 +98,9 @@ def check_folder_exist(folder_path: str) -> None:
         raise ValueError
 
 
-def get_main_page(url):
+def get_main_page(url: str) -> requests.Response:
     try:
-        response = requests.get(url)
+        response: requests.Response = requests.get(url)
         response.raise_for_status()
         return response
     except requests.exceptions.HTTPError as error:
@@ -111,7 +111,7 @@ def get_main_page(url):
         raise requests.exceptions.RequestException
 
 
-def prepare_output_folder(full_path, output_path):
+def prepare_output_folder(full_path: str, output_path: str) -> None:
     if not os.path.exists(full_path):
         logging.info(f'Creating folder {full_path}')
         try:
@@ -121,10 +121,9 @@ def prepare_output_folder(full_path, output_path):
             raise OSError
 
 
-def download(url, output_path) -> str:
+def download(url: str, output_path: str) -> str:
     check_folder_exist(output_path)
     url_names: NamedTuple = build_urlinfo(url, output_path)
-    prepare_output_folder(url_names.directory_full_path, output_path)
 
     response = get_main_page(url)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -132,6 +131,8 @@ def download(url, output_path) -> str:
     images = soup.find_all(IMG)
     link_resources = soup.find_all(LINK)
     script_resources = soup.find_all(SCRIPT, src=True)
+    if len(images + script_resources + link_resources):
+        prepare_output_folder(url_names.directory_full_path, output_path)
 
     for item in Bar('Downloading').iter(
             images + script_resources + link_resources):
