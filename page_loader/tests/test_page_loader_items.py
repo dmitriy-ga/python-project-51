@@ -1,4 +1,4 @@
-from src.page_loader import download
+from page_loader.page_loader import download
 import requests_mock
 import pytest
 import tempfile
@@ -8,21 +8,21 @@ import logging
 
 @pytest.fixture
 def htmlitems_simple() -> str:
-    file_example_path = 'src/tests/fixtures/simple_items.html'
+    file_example_path = 'page_loader/tests/fixtures/simple_items.html'
     expected = read_file(file_example_path)
     return expected
 
 
 @pytest.fixture
 def link_simple() -> str:
-    file_example_path = 'src/tests/fixtures/example_link.css'
+    file_example_path = 'page_loader/tests/fixtures/example_link.css'
     expected = read_file(file_example_path)
     return expected
 
 
 @pytest.fixture
 def script_simple() -> str:
-    file_example_path = 'src/tests/fixtures/empty_script.js'
+    file_example_path = 'page_loader/tests/fixtures/empty_script.js'
     expected = read_file(file_example_path)
     return expected
 

@@ -2,19 +2,19 @@ install:
 	poetry install
 
 test:
-	poetry run pytest src
+	poetry run pytest page_loader
 
 build:
 	poetry build
 
 lint:
-	poetry run flake8 src
+	poetry run flake8 page_loader
 
 test-coverage:
-	poetry run pytest --cov=src --cov-report xml
+	poetry run pytest --cov=page_loader --cov-report xml
 
 test-coverage-info:
-	poetry run pytest --cov-report term-missing --cov=src src/tests/
+	poetry run pytest --cov-report term-missing --cov=page_loader page_loader/tests/
 
 selfcheck:
 	poetry check

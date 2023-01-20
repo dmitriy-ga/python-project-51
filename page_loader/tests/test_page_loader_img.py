@@ -1,4 +1,4 @@
-from src.page_loader import download
+from page_loader.page_loader import download
 import requests_mock
 import pytest
 import tempfile
@@ -8,14 +8,14 @@ import logging
 
 @pytest.fixture
 def htmlpic_simple() -> str:
-    file_example_path = 'src/tests/fixtures/simple_pic.html'
+    file_example_path = 'page_loader/tests/fixtures/simple_pic.html'
     expected = read_file(file_example_path)
     return expected
 
 
 @pytest.fixture
 def pic_simple() -> bytes:
-    file_example_path = 'src/tests/fixtures/examplepic.jpg'
+    file_example_path = 'page_loader/tests/fixtures/examplepic.jpg'
     expected = read_img(file_example_path)
     return expected
 

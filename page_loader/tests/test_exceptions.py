@@ -1,5 +1,5 @@
 import requests.exceptions
-from src.page_loader import get_main_page, check_folder_exist
+from page_loader.page_loader import get_main_page, check_folder_exist
 import pytest
 import tempfile
 import os.path

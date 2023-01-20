@@ -10,7 +10,7 @@ classifiers = [
   "Topic :: Internet",
   "Topic :: Utilities"
 ]
-packages = [{include = "src"}]
+packages = [{include = "page_loader"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"

@@ -1,6 +1,6 @@
 import argparse
 import os
-from src.page_loader import download
+from page_loader.page_loader import download
 import logging
 import sys
 
