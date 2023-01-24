@@ -27,8 +27,6 @@ class UrlInfo(NamedTuple):
 
 class ItemInfo(NamedTuple):
     item_url_index: str
-    write_mode: str
-    tag_type: str
     item_host: str
     item_url: str
     name: str
@@ -52,8 +50,6 @@ def build_urlinfo(url: str, output_path: str) -> UrlInfo:
 
 def build_iteminfo(item, url) -> ItemInfo:
     item_url_index: str = HREF if item.name == LINK else SRC
-    write_mode: str = WB if item.name == IMG else W
-    tag_type: str = item.name
 
     item_host: str = urlparse(item[item_url_index]).netloc
     item_url: str = urljoin(url, item[item_url_index])
@@ -67,8 +63,7 @@ def build_iteminfo(item, url) -> ItemInfo:
         logging.debug(f'...to {name}')
     else:
         name: str = name_resource_file(item_url)
-    return ItemInfo(item_url_index, write_mode, tag_type,
-                    item_host, item_url, name, name_extension)
+    return ItemInfo(item_url_index, item_host, item_url, name, name_extension)
 
 
 def name_output_file(url: str) -> str:
@@ -150,17 +145,13 @@ def download(url: str, output_path: str) -> str:
 
         full_name: str = os.path.join(url_names.folder_name, item_names.name)
 
-        item_content: str or bytes = (
-            requests.get(item_names.item_url).content
-            if item_names.tag_type == IMG
-            else requests.get(item_names.item_url).text)
+        item_content = requests.get(item_names.item_url).content
 
         # Updating local HTML file for new address
         item[item_names.item_url_index] = full_name
 
         logging.debug(f'Saving resource {item_names.name}')
-        with open(os.path.join(output_path, full_name),
-                  item_names.write_mode) as file:
+        with open(os.path.join(output_path, full_name), WB) as file:
             file.write(item_content)
 
     logging.debug(f'Saving HTML page {url_names.html_name}')
