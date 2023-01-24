@@ -53,7 +53,8 @@ def test_download_img(caplog, htmlpic_simple, pic_simple) -> None:
                          htmlpic_simple, pic_simple,
                          d)
 
-        img_path = 'testdownload-net-imgpage_files/examplepic.jpg'
+        img_path = \
+            'testdownload-net-imgpage_files/testdownload-net-examplepic.jpg'
         img_path = os.path.join(d, img_path)
         received_mock = read_img(img_path)
         assert received_mock == pic_simple

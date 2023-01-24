@@ -30,6 +30,7 @@ class ItemInfo(NamedTuple):
     write_mode: str
     tag_type: str
     item_host: str
+    item_url: str
     name: str
     name_ext: str
 
@@ -49,12 +50,13 @@ def build_urlinfo(url: str, output_path: str) -> UrlInfo:
                    html_full_path)
 
 
-def build_iteminfo(item) -> ItemInfo:
+def build_iteminfo(item, url) -> ItemInfo:
     item_url_index: str = HREF if item.name == LINK else SRC
     write_mode: str = WB if item.name == IMG else W
     tag_type: str = item.name
 
     item_host: str = urlparse(item[item_url_index]).netloc
+    item_url: str = urljoin(url, item[item_url_index])
     name: str = os.path.basename(item[item_url_index])
     name_extension: str = os.path.splitext(name)[extension_index]
 
@@ -64,9 +66,9 @@ def build_iteminfo(item) -> ItemInfo:
         name: str = name_output_file(item[item_url_index]) + '.html'
         logging.debug(f'...to {name}')
     else:
-        name: str = name_resource_file(name)
+        name: str = name_resource_file(item_url)
     return ItemInfo(item_url_index, write_mode, tag_type,
-                    item_host, name, name_extension)
+                    item_host, item_url, name, name_extension)
 
 
 def name_output_file(url: str) -> str:
@@ -76,8 +78,9 @@ def name_output_file(url: str) -> str:
     return parsed_url
 
 
-def name_resource_file(input_name: str) -> str:
-    name, extension = os.path.splitext(input_name)
+def name_resource_file(item_url: str) -> str:
+    name, extension = os.path.splitext(item_url)
+    name: str = ''.join(urlparse(name)[1:3])
     name: str = normalize_name(name)
     return ''.join((name, extension))
 
@@ -137,7 +140,7 @@ def download(url: str, output_path: str) -> str:
     for item in Bar('Downloading').iter(
             images + script_resources + link_resources):
 
-        item_names = build_iteminfo(item)
+        item_names = build_iteminfo(item, url)
 
         # Checking same host of item
         if all((not item_names.item_host == '',
@@ -147,10 +150,10 @@ def download(url: str, output_path: str) -> str:
 
         full_name: str = os.path.join(url_names.folder_name, item_names.name)
 
-        item_url: str = urljoin(url, item[item_names.item_url_index])
         item_content: str or bytes = (
-            requests.get(item_url).content if item_names.tag_type == IMG
-            else requests.get(item_url).text)
+            requests.get(item_names.item_url).content
+            if item_names.tag_type == IMG
+            else requests.get(item_names.item_url).text)
 
         # Updating local HTML file for new address
         item[item_names.item_url_index] = full_name
