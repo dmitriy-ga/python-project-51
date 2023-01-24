@@ -30,4 +30,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-page-loader = "src.scripts.page_loader_start:main"
+page-loader = "page_loader.scripts.page_loader_start:main"
