@@ -63,7 +63,7 @@ def build_iteminfo(item, url) -> ItemInfo:
     # Checking link for HTML page
     if item.name == LINK and any((not name, not name_extension)):
         logging.debug(f'Renaming {name}...')
-        name: str = name_output_file(item[item_url_index]) + '.html'
+        name: str = name_output_file(item_url) + '.html'
         logging.debug(f'...to {name}')
     else:
         name: str = name_resource_file(item_url)
