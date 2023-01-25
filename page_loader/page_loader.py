@@ -1,6 +1,6 @@
 import os
 import requests
-from bs4 import BeautifulSoup
+import bs4
 from urllib.parse import urlparse, urljoin
 from typing import NamedTuple
 import logging
@@ -14,7 +14,7 @@ IMG = 'img'
 SCRIPT = 'script'
 W = 'w'
 WB = 'wb'
-extension_index = 1
+EXTENSION_INDEX = 1
 
 
 class UrlInfo(NamedTuple):
@@ -33,9 +33,9 @@ class ItemInfo(NamedTuple):
     name_ext: str
 
 
-def build_urlinfo(url: str, output_path: str) -> UrlInfo:
-    base_name: str = name_output_file(url)
-    html_name: str = base_name + '.html'
+def build_url_info(url: str, output_path: str) -> UrlInfo:
+    html_name: str = name_html_file(url)
+    base_name, _ = os.path.splitext(html_name)
     folder_name: str = base_name + '_files'
     host_url: str = urlparse(url).netloc
     directory_full_path: str = os.path.join(output_path, folder_name)
@@ -48,27 +48,31 @@ def build_urlinfo(url: str, output_path: str) -> UrlInfo:
                    html_full_path)
 
 
-def build_iteminfo(item, url) -> ItemInfo:
+def build_item_info(item: bs4.Tag, url: str) -> ItemInfo:
     item_url_index: str = HREF if item.name == LINK else SRC
 
     item_host: str = urlparse(item[item_url_index]).netloc
     item_url: str = urljoin(url, item[item_url_index])
     name: str = os.path.basename(item[item_url_index])
-    name_extension: str = os.path.splitext(name)[extension_index]
+    name_extension: str = os.path.splitext(name)[EXTENSION_INDEX]
 
     # Checking link for HTML page
     if item.name == LINK and any((not name, not name_extension)):
         logging.debug(f'Renaming {name}...')
-        name: str = name_output_file(item_url) + '.html'
+        name: str = name_html_file(item_url)
         logging.debug(f'...to {name}')
     else:
         name: str = name_resource_file(item_url)
+
+    logging.debug(f'Building iteminfo:'
+                  f'{name=}, {name_extension=}, {item_url=}'
+                  f'{item_url_index=}, {item_host=}')
     return ItemInfo(item_url_index, item_host, item_url, name, name_extension)
 
 
-def name_output_file(url: str) -> str:
+def name_html_file(url: str) -> str:
     parsed_url: str = ''.join(urlparse(url)[1:3])
-    parsed_url: str = normalize_name(parsed_url)
+    parsed_url: str = normalize_name(parsed_url) + '.html'
     logging.debug(f'For {url} generated name {parsed_url}')
     return parsed_url
 
@@ -121,21 +125,21 @@ def prepare_output_folder(full_path: str, output_path: str) -> None:
 
 def download(url: str, output_path: str) -> str:
     check_folder_exist(output_path)
-    url_names: NamedTuple = build_urlinfo(url, output_path)
+    url_names: NamedTuple = build_url_info(url, output_path)
 
-    response = get_main_page(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
+    response: requests.Response = get_main_page(url)
+    soup: bs4.BeautifulSoup = bs4.BeautifulSoup(response.text, 'html.parser')
 
-    images = soup.find_all(IMG)
-    link_resources = soup.find_all(LINK)
-    script_resources = soup.find_all(SCRIPT, src=True)
+    images: bs4.ResultSet = soup.find_all(IMG)
+    link_resources: bs4.ResultSet = soup.find_all(LINK)
+    script_resources: bs4.ResultSet = soup.find_all(SCRIPT, src=True)
     if len(images + script_resources + link_resources):
         prepare_output_folder(url_names.directory_full_path, output_path)
 
     for item in Bar('Downloading').iter(
             images + script_resources + link_resources):
 
-        item_names = build_iteminfo(item, url)
+        item_names: ItemInfo = build_item_info(item, url)
 
         # Checking same host of item
         if all((not item_names.item_host == '',
