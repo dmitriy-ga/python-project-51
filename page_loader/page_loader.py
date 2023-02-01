@@ -43,11 +43,10 @@ def download(url: str, output_path: str) -> str:
     response: requests.Response = get_main_page(url)
     soup: bs4.BeautifulSoup = bs4.BeautifulSoup(response.text, 'html.parser')
 
-    assets: list[bs4.ResultSet] = (
-            soup.find_all(IMG) +
-            soup.find_all(LINK) +
-            soup.find_all(SCRIPT, src=True)
-    )
+    assets: list[bs4.ResultSet] = (soup.find_all(IMG)
+                                   + soup.find_all(LINK)
+                                   + soup.find_all(SCRIPT, src=True)
+                                   )
     if len(assets):
         prepare_output_folder(url_names.directory_full_path, output_path)
 
