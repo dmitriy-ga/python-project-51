@@ -48,14 +48,15 @@ def download(url: str, output_path: str) -> str:
     response: requests.Response = get_main_page(url)
     soup: bs4.BeautifulSoup = bs4.BeautifulSoup(response.text, 'html.parser')
 
-    images: bs4.ResultSet = soup.find_all(IMG)
-    link_resources: bs4.ResultSet = soup.find_all(LINK)
-    script_resources: bs4.ResultSet = soup.find_all(SCRIPT, src=True)
-    if len(images + script_resources + link_resources):
+    assets: list[bs4.ResultSet] = (
+            soup.find_all(IMG) +
+            soup.find_all(LINK) +
+            soup.find_all(SCRIPT, src=True)
+    )
+    if len(assets):
         prepare_output_folder(url_names.directory_full_path, output_path)
 
-    for item in Bar('Downloading').iter(
-            images + script_resources + link_resources):
+    for item in Bar('Downloading').iter(assets):
 
         item_names: ItemInfo = build_item_info(item, url)
 
