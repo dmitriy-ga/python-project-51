@@ -13,22 +13,18 @@ WB = 'wb'
 
 
 def check_folder_exist(folder_path: str) -> None:
+    logging.debug(f'Checking folder {folder_path}')
     if not os.path.exists(folder_path):
-        logging.error(f'{folder_path} does not exist')
-        raise ValueError
+        raise ValueError(f'{folder_path} does not exist')
+    logging.info('Folder founded')
 
 
 def get_main_page(url: str) -> requests.Response:
-    try:
-        response: requests.Response = requests.get(url)
-        response.raise_for_status()
-        return response
-    except requests.exceptions.HTTPError as error:
-        logging.error(f'Unable to get the page, got response {error}')
-        raise requests.exceptions.HTTPError
-    except requests.exceptions.RequestException as error:
-        logging.error(f'Unable to connect, error: {error}')
-        raise requests.exceptions.RequestException
+    logging.debug(f'Getting response from {url}')
+    response: requests.Response = requests.get(url)
+    response.raise_for_status()
+    logging.info('Response passed')
+    return response
 
 
 def prepare_output_folder(full_path: str, output_path: str) -> None:
@@ -37,8 +33,7 @@ def prepare_output_folder(full_path: str, output_path: str) -> None:
         try:
             os.mkdir(full_path)
         except OSError:
-            logging.error(f'Unable create folder at {output_path}')
-            raise OSError
+            raise OSError(f'Unable create folder at {output_path}')
 
 
 def download(url: str, output_path: str) -> str:

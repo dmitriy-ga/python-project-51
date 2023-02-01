@@ -21,8 +21,8 @@ def main() -> None:
 
     try:
         print(download(url, output))
-    except Exception:
-        logging.error('Unable download page')
+    except Exception as error:
+        logging.error(f'Unable download page: {error}')
         sys.exit(1)
 
 
