@@ -3,45 +3,31 @@ import logging
 import bs4
 import os
 from progress.bar import Bar
-from .file_processor import build_item_info, UrlInfo, ItemInfo, LINK
+from page_loader.file_processor import build_downloadable_file, UrlInfo, \
+    DownloadableFile, LINK
 
 IMG = 'img'
 SCRIPT = 'script'
 WB = 'wb'
 
 
-def prepare_output_folder(full_path: str) -> None:
-    if not os.path.exists(full_path):
-        logging.info(f'Creating folder {full_path}')
-        try:
-            os.mkdir(full_path)
-        except OSError:
-            raise OSError(f'Unable create folder at {full_path}')
-
-
-def get_main_page(url: str) -> bs4.BeautifulSoup:
+def get_resources(url: str, url_names: UrlInfo
+                  ) -> (bs4.BeautifulSoup, list[DownloadableFile, ...]):
     logging.debug(f'Getting response from {url}')
     response: requests.Response = requests.get(url)
     response.raise_for_status()
-    logging.info('Response passed')
-    return bs4.BeautifulSoup(response.text, 'html.parser')
-
-
-def get_resources(url: str, url_names: UrlInfo
-                  ) -> (bs4.BeautifulSoup, list[ItemInfo, ...]):
-
-    soup: bs4.BeautifulSoup = get_main_page(url)
+    soup: bs4.BeautifulSoup = bs4.BeautifulSoup(response.text, 'html.parser')
 
     assets: list[bs4.Tag, ...] = (soup.find_all(IMG)
                                   + soup.find_all(LINK)
                                   + soup.find_all(SCRIPT, src=True)
                                   )
 
-    assets_actual: list[ItemInfo, ...] = []
+    assets_actual: list[DownloadableFile, ...] = []
 
     # Updating all links in HTML:
     for item in assets:
-        item_names: ItemInfo = build_item_info(item, url)
+        item_names: DownloadableFile = build_downloadable_file(item, url)
 
         if not is_same_host(item_names.item_host, url_names.host_url):
             logging.info(f'{item_names.name} skipped, non-same host')
@@ -60,12 +46,18 @@ def is_same_host(url_item: str, url_host: str) -> bool:
     return url_item == url_host
 
 
-def download_assets(assets: list[ItemInfo],
+def download_assets(assets: list[DownloadableFile],
                     url_names: UrlInfo, output_path: str) -> None:
     if not len(assets):
         return None
 
-    prepare_output_folder(url_names.directory_full_path)
+    if not os.path.exists(url_names.directory_full_path):
+        logging.info(f'Creating folder {url_names.directory_full_path}')
+        try:
+            os.mkdir(url_names.directory_full_path)
+        except OSError:
+            raise OSError(
+                f'Unable create folder at {url_names.directory_full_path}')
 
     for item in Bar('Downloading').iter(assets):
         item_content = requests.get(item.item_url).content
