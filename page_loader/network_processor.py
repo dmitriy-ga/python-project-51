@@ -4,11 +4,7 @@ import bs4
 import os
 from progress.bar import Bar
 from page_loader.file_processor import build_downloadable_file, UrlInfo, \
-    DownloadableFile, LINK
-
-IMG = 'img'
-SCRIPT = 'script'
-WB = 'wb'
+    DownloadableFile, DOWNLOAD_TAG_MAP
 
 
 def get_resources(url: str, url_names: UrlInfo
@@ -18,16 +14,16 @@ def get_resources(url: str, url_names: UrlInfo
     response.raise_for_status()
     soup: bs4.BeautifulSoup = bs4.BeautifulSoup(response.text, 'html.parser')
 
-    assets: list[bs4.Tag, ...] = (soup.find_all(IMG)
-                                  + soup.find_all(LINK)
-                                  + soup.find_all(SCRIPT, src=True)
-                                  )
-
+    assets: list[bs4.Tag, ...] = (soup.find_all(DOWNLOAD_TAG_MAP.keys()))
     assets_actual: list[DownloadableFile, ...] = []
 
     # Updating all links in HTML:
     for item in assets:
         item_names: DownloadableFile = build_downloadable_file(item, url)
+
+        if not item_names:
+            logging.info(f'{item} have no URL, skipped')
+            continue
 
         if not is_same_host(item_names.item_host, url_names.host_url):
             logging.info(f'{item_names.name} skipped, non-same host')
@@ -37,7 +33,7 @@ def get_resources(url: str, url_names: UrlInfo
         # Updating local HTML file for new address
         item[item_names.item_url_index] = full_name
         assets_actual.append(item_names)
-    return soup, assets_actual
+    return soup.prettify(), assets_actual
 
 
 def is_same_host(url_item: str, url_host: str) -> bool:
@@ -63,5 +59,5 @@ def download_assets(assets: list[DownloadableFile],
         item_content = requests.get(item.item_url).content
         full_name: str = os.path.join(url_names.folder_name, item.name)
         logging.debug(f'Saving resource {item.name}')
-        with open(os.path.join(output_path, full_name), WB) as file:
+        with open(os.path.join(output_path, full_name), 'wb') as file:
             file.write(item_content)

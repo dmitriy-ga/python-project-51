@@ -4,9 +4,11 @@ from typing import NamedTuple
 from urllib.parse import urlparse, urljoin, ParseResult
 import bs4
 
-HREF = 'href'
-SRC = 'src'
-LINK = 'link'
+DOWNLOAD_TAG_MAP: dict[str: str, ...] = {
+    'link': 'href',
+    'script': 'src',
+    'img': 'src'
+}
 
 
 class UrlInfo(NamedTuple):
@@ -41,12 +43,11 @@ def build_url_info(url: str, output_path: str) -> UrlInfo:
                    html_full_path)
 
 
-def build_downloadable_file(item: bs4.Tag, url: str) -> DownloadableFile:
-    if item.name == LINK:
-        item_url_index: str = HREF
-    else:
-        item_url_index: str = SRC
+def build_downloadable_file(item: bs4.Tag, url: str) -> None | DownloadableFile:
+    item_url_index: str = DOWNLOAD_TAG_MAP.get(item.name)
 
+    if not item.get(item_url_index):
+        return None
     item_host: str = urlparse(item[item_url_index]).netloc
     item_url: str = urljoin(url, item[item_url_index])
 
@@ -55,7 +56,7 @@ def build_downloadable_file(item: bs4.Tag, url: str) -> DownloadableFile:
     _, name_extension = os.path.splitext(name)
 
     # Checking link for HTML page
-    if item.name == LINK and any((not name, not name_extension)):
+    if item.name == 'link' and any((not name, not name_extension)):
         logging.debug(f'Renaming {name}...')
         name: str = name_html_file(item_url)
         logging.debug(f'...to {name}')
