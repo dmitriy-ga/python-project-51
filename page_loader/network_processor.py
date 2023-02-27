@@ -7,8 +7,8 @@ from page_loader.file_processor import build_downloadable_file, UrlInfo, \
     DownloadableFile, DOWNLOAD_TAG_MAP
 
 
-def get_resources(url: str, url_names: UrlInfo
-                  ) -> (bs4.BeautifulSoup, list[DownloadableFile, ...]):
+def prepare_data(url: str, url_names: UrlInfo
+                 ) -> (bs4.BeautifulSoup, list[DownloadableFile, ...]):
     logging.debug(f'Getting response from {url}')
     response: requests.Response = requests.get(url)
     response.raise_for_status()
@@ -37,23 +37,18 @@ def get_resources(url: str, url_names: UrlInfo
 
 
 def is_same_host(url_item: str, url_host: str) -> bool:
-    if url_item == '':
-        url_item = url_host
-    return url_item == url_host
+    return url_item == '' or url_item == url_host
 
 
 def download_assets(assets: list[DownloadableFile],
                     url_names: UrlInfo, output_path: str) -> None:
     if not len(assets):
+        logging.info('Page has no files to download, folder creation skipped')
         return None
 
     if not os.path.exists(url_names.directory_full_path):
         logging.info(f'Creating folder {url_names.directory_full_path}')
-        try:
-            os.mkdir(url_names.directory_full_path)
-        except OSError:
-            raise OSError(
-                f'Unable create folder at {url_names.directory_full_path}')
+        os.mkdir(url_names.directory_full_path)
 
     for item in Bar('Downloading').iter(assets):
         item_content = requests.get(item.item_url).content

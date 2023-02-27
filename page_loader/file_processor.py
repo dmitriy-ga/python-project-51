@@ -27,7 +27,7 @@ class DownloadableFile(NamedTuple):
 
 
 def build_url_info(url: str, output_path: str) -> UrlInfo:
-    html_name: str = name_html_file(url)
+    html_name: str = name_file(url)
     base_name: str
     base_name, _ = os.path.splitext(html_name)
     folder_name: str = base_name + '_files'
@@ -58,10 +58,10 @@ def build_downloadable_file(item: bs4.Tag, url: str) -> None | DownloadableFile:
     # Checking link for HTML page
     if item.name == 'link' and any((not name, not name_extension)):
         logging.debug(f'Renaming {name}...')
-        name: str = name_html_file(item_url)
+        name: str = name_file(item_url)
         logging.debug(f'...to {name}')
     else:
-        name: str = name_resource_file(item_url)
+        name: str = name_file(item_url)
 
     logging.debug(f'Building downloadable file:'
                   f'{name=}, {name_extension=}, {item_url=}'
@@ -69,20 +69,15 @@ def build_downloadable_file(item: bs4.Tag, url: str) -> None | DownloadableFile:
     return DownloadableFile(item_url_index, item_host, item_url, name)
 
 
-def name_html_file(url: str) -> str:
-    parsed_url: ParseResult = urlparse(url)
-    name: str = parsed_url.netloc + parsed_url.path
-    name_html: str = normalize_name(name) + '.html'
-    logging.debug(f'For {url} generated name {name_html}')
-    return name_html
-
-
-def name_resource_file(item_url: str) -> str:
+def name_file(input_url: str) -> str:
     base_name: str
     extension: str
-    base_name, extension = os.path.splitext(item_url)
+    base_name, extension = os.path.splitext(input_url)
+    if not extension:
+        extension = '.html'
     parsed_url: ParseResult = urlparse(base_name)
     name: str = normalize_name(parsed_url.netloc + parsed_url.path)
+    logging.debug(f'For {input_url} generated name {name + extension}')
     return name + extension
 
 

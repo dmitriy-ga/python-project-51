@@ -1,6 +1,6 @@
 import logging
 import os
-from .network_processor import get_resources, download_assets
+from .network_processor import prepare_data, download_assets
 from .file_processor import build_url_info, UrlInfo
 
 
@@ -12,7 +12,7 @@ def download(url: str, output_path: str) -> str:
 
     url_names: UrlInfo = build_url_info(url, output_path)
 
-    soup, assets_actual = get_resources(url, url_names)
+    soup, assets_actual = prepare_data(url, url_names)
     download_assets(assets_actual, url_names, output_path)
 
     logging.debug(f'Saving HTML page {url_names.html_name}')
