@@ -6,47 +6,36 @@ import os
 import logging
 
 
-def read_html(file_path: str) -> str:
-    with open(file_path) as file:
+R = 'r'
+RB = 'rb'
+PLACEHOLDER_HOST: str = 'https://testdownload.net/'
+FIXTURES_PATH: str = 'page_loader/tests/fixtures/'
+
+
+def read_file(file_path: str, read_mode: str) -> bytes | str:
+    with open(file_path, read_mode) as file:
         return file.read()
-
-
-def read_binary_file(file_path: str) -> bytes:
-    with open(file_path, 'rb') as file:
-        return file.read()
-
-
-site_url: str = 'https://testdownload.net/'
-fixtures_path: str = 'page_loader/tests/fixtures/'
-
-empty_link = read_binary_file(os.path.join(fixtures_path, 'empty_link.css'))
-simple_link = read_html(os.path.join(fixtures_path, 'simple_link.html'))
-
-empty_script = read_binary_file(os.path.join(fixtures_path, 'empty_script.js'))
-simple_script = read_html(os.path.join(fixtures_path, 'simple_script.html'))
-
-example_pic = read_binary_file(os.path.join(fixtures_path, 'example_pic.jpg'))
-simple_pic = read_html(os.path.join(fixtures_path, 'simple_pic.html'))
-
-example_text = read_binary_file(os.path.join(fixtures_path, 'simple_text.html'))
-simple_text = read_html(os.path.join(fixtures_path, 'simple_text.html'))
 
 
 @pytest.mark.parametrize(
     'fixture, fixture_html, fixture_url, item_path', [
-        (empty_link, simple_link,
+        (read_file(os.path.join(FIXTURES_PATH, 'empty_link.css'), RB),
+         read_file(os.path.join(FIXTURES_PATH, 'simple_link.html'), R),
          'https://testdownload.net/empty_link.css',
          'testdownload-net_files/testdownload-net-empty-link.css', ),
 
-        (empty_script, simple_script,
+        (read_file(os.path.join(FIXTURES_PATH, 'empty_script.js'), RB),
+         read_file(os.path.join(FIXTURES_PATH, 'simple_script.html'), R),
          'https://testdownload.net/empty_script.js',
          'testdownload-net_files/testdownload-net-empty-script.js'),
 
-        (example_pic, simple_pic,
+        (read_file(os.path.join(FIXTURES_PATH, 'example_pic.jpg'), RB),
+         read_file(os.path.join(FIXTURES_PATH, 'simple_pic.html'), R),
          'https://testdownload.net/example_pic.jpg',
          'testdownload-net_files/testdownload-net-example-pic.jpg'),
 
-        (example_text, simple_text,
+        (read_file(os.path.join(FIXTURES_PATH, 'simple_text.html'), RB),
+         read_file(os.path.join(FIXTURES_PATH, 'simple_text.html'), R),
          None,
          'testdownload-net.html')
     ])
@@ -58,9 +47,9 @@ def test_download_page(caplog, fixture, fixture_html, fixture_url, item_path
         logging.debug(f'Created temporary folder {d}')
 
         with requests_mock.Mocker() as m:
-            m.get(site_url, text=fixture_html)
+            m.get(PLACEHOLDER_HOST, text=fixture_html)
             m.get(fixture_url, content=fixture)
-            download(site_url, d)
-        received_file: bytes = read_binary_file(os.path.join(d, item_path))
+            download(PLACEHOLDER_HOST, d)
+        received_file: bytes = read_file(os.path.join(d, item_path), RB)
 
     assert received_file == fixture
