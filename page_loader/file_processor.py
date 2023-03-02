@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from typing import NamedTuple
 from urllib.parse import urlparse, urljoin, ParseResult
 import bs4
@@ -82,10 +83,6 @@ def name_file(input_url: str) -> str:
 
 
 def normalize_name(input_name: str) -> str:
-    unwanted_symbols: tuple = ('/', '.', '_')
     dash: str = '-'
-    for symbol in unwanted_symbols:
-        if symbol in input_name:
-            input_name = input_name.replace(symbol, dash)
-    input_name: str = input_name.rstrip(dash)
-    return input_name
+    normalized_name: str = re.sub(r'[^a-z0-9+]', dash, input_name)
+    return normalized_name.rstrip(dash)
