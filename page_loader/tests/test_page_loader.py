@@ -1,15 +1,9 @@
-from page_loader.page_loader import download
-import requests_mock
-import pytest
-import tempfile
-import os
 import logging
-
-
-R = 'r'
-RB = 'rb'
-PLACEHOLDER_HOST: str = 'https://testdownload.net/'
-FIXTURES_PATH: str = 'page_loader/tests/fixtures/'
+import os
+import tempfile
+import pytest
+import requests_mock
+from page_loader.page_loader import download
 
 
 def read_file(file_path: str, read_mode: str) -> bytes | str:
@@ -17,39 +11,49 @@ def read_file(file_path: str, read_mode: str) -> bytes | str:
         return file.read()
 
 
+def get_fixture_path(file_name: str) -> str:
+    fixtures_path: str = 'page_loader/tests/fixtures/'
+    return os.path.join(fixtures_path, file_name)
+
+
 @pytest.mark.parametrize(
-    'fixture, fixture_html, fixture_url, item_path', [
-        (read_file(os.path.join(FIXTURES_PATH, 'empty_link.css'), RB),
-         read_file(os.path.join(FIXTURES_PATH, 'simple_link.html'), R),
+    'fixture_name, fixture_html_name, fixture_url, item_path', [
+        ('empty_link.css',
+         'simple_link.html',
          'https://testdownload.net/empty_link.css',
          'testdownload-net_files/testdownload-net-empty-link.css', ),
 
-        (read_file(os.path.join(FIXTURES_PATH, 'empty_script.js'), RB),
-         read_file(os.path.join(FIXTURES_PATH, 'simple_script.html'), R),
+        ('empty_script.js',
+         'simple_script.html',
          'https://testdownload.net/empty_script.js',
          'testdownload-net_files/testdownload-net-empty-script.js'),
 
-        (read_file(os.path.join(FIXTURES_PATH, 'example_pic.jpg'), RB),
-         read_file(os.path.join(FIXTURES_PATH, 'simple_pic.html'), R),
+        ('example_pic.jpg',
+         'simple_pic.html',
          'https://testdownload.net/example_pic.jpg',
          'testdownload-net_files/testdownload-net-example-pic.jpg'),
 
-        (read_file(os.path.join(FIXTURES_PATH, 'simple_text.html'), RB),
-         read_file(os.path.join(FIXTURES_PATH, 'simple_text.html'), R),
+        ('simple_text.html',
+         'simple_text.html',
          None,
          'testdownload-net.html')
     ])
-def test_download_page(caplog, fixture, fixture_html, fixture_url, item_path
-                       ) -> None:
+def test_download_page(caplog, fixture_name, fixture_html_name, fixture_url,
+                       item_path) -> None:
 
     caplog.set_level(logging.DEBUG)
+    placeholder_url: str = 'https://testdownload.net/'
+    fixture: bytes = read_file(get_fixture_path(fixture_name), 'rb')
+    fixture_html: str = read_file(get_fixture_path(fixture_html_name), 'r')
+
+    logging.debug(f'Testing case with {fixture_name}')
     with tempfile.TemporaryDirectory() as d:
         logging.debug(f'Created temporary folder {d}')
 
         with requests_mock.Mocker() as m:
-            m.get(PLACEHOLDER_HOST, text=fixture_html)
+            m.get(placeholder_url, text=fixture_html)
             m.get(fixture_url, content=fixture)
-            download(PLACEHOLDER_HOST, d)
-        received_file: bytes = read_file(os.path.join(d, item_path), RB)
+            download(placeholder_url, d)
+        received_file: bytes = read_file(os.path.join(d, item_path), 'rb')
 
     assert received_file == fixture
