@@ -15,16 +15,16 @@ DOWNLOAD_TAG_MAP: dict[str: str, ...] = {
 class UrlInfo(NamedTuple):
     html_name: str
     folder_name: str
-    host_url: str
+    host: str
     directory_full_path: str
     html_full_path: str
 
 
 class DownloadableFile(NamedTuple):
-    item_url_index: str
-    item_host: str
-    item_url: str
-    name: str
+    tag_name: str
+    host: str
+    url: str
+    file_name: str
 
 
 def build_url_info(url: str, output_path: str) -> UrlInfo:
@@ -33,41 +33,43 @@ def build_url_info(url: str, output_path: str) -> UrlInfo:
     base_name, _ = os.path.splitext(html_name)
     folder_name: str = base_name + '_files'
 
-    host_url: str = urlparse(url).netloc
+    host: str = urlparse(url).netloc
     directory_full_path: str = os.path.join(output_path, folder_name)
     html_full_path: str = os.path.join(output_path, html_name)
     logging.debug(f'Building urlinfo:'
                   f'{base_name=}, {html_name=}'
-                  f'{folder_name=}, {host_url=},'
+                  f'{folder_name=}, {host=},'
                   f'{directory_full_path=}, {html_full_path=}')
-    return UrlInfo(html_name, folder_name, host_url, directory_full_path,
+    return UrlInfo(html_name, folder_name, host, directory_full_path,
                    html_full_path)
 
 
-def build_downloadable_file(item: bs4.Tag, url: str) -> None | DownloadableFile:
-    item_url_index: str = DOWNLOAD_TAG_MAP.get(item.name)
+def build_downloadable_file(item: bs4.Tag, input_url: str
+                            ) -> None | DownloadableFile:
 
-    if not item.get(item_url_index):
+    tag_name: str = DOWNLOAD_TAG_MAP.get(item.name)
+    if not item.get(tag_name):
         return None
-    item_host: str = urlparse(item[item_url_index]).netloc
-    item_url: str = urljoin(url, item[item_url_index])
 
-    name: str = os.path.basename(item[item_url_index])
+    host: str = urlparse(item[tag_name]).netloc
+    url: str = urljoin(input_url, item[tag_name])
+
+    file_name: str = os.path.basename(item[tag_name])
     name_extension: str
-    _, name_extension = os.path.splitext(name)
+    _, name_extension = os.path.splitext(file_name)
 
     # Checking link for HTML page
-    if item.name == 'link' and any((not name, not name_extension)):
-        logging.debug(f'Renaming {name}...')
-        name: str = name_file(item_url)
-        logging.debug(f'...to {name}')
+    if item.name == 'link' and any((not file_name, not name_extension)):
+        logging.debug(f'Renaming {file_name}...')
+        file_name: str = name_file(url)
+        logging.debug(f'...to {file_name}')
     else:
-        name: str = name_file(item_url)
+        file_name: str = name_file(url)
 
     logging.debug(f'Building downloadable file:'
-                  f'{name=}, {name_extension=}, {item_url=}'
-                  f'{item_url_index=}, {item_host=}')
-    return DownloadableFile(item_url_index, item_host, item_url, name)
+                  f'{file_name=}, {name_extension=}, {url=}'
+                  f'{tag_name=}, {host=}')
+    return DownloadableFile(tag_name, host, url, file_name)
 
 
 def name_file(input_url: str) -> str:
@@ -77,12 +79,12 @@ def name_file(input_url: str) -> str:
     if not extension:
         extension = '.html'
     parsed_url: ParseResult = urlparse(base_name)
-    name: str = normalize_name(parsed_url.netloc + parsed_url.path)
+    name: str = normalize(parsed_url.netloc + parsed_url.path)
     logging.debug(f'For {input_url} generated name {name + extension}')
     return name + extension
 
 
-def normalize_name(input_name: str) -> str:
+def normalize(url: str) -> str:
     dash: str = '-'
-    normalized_name: str = re.sub(r'[^a-z0-9+]', dash, input_name)
+    normalized_name: str = re.sub(r'[^a-z0-9+]', dash, url)
     return normalized_name.rstrip(dash)
