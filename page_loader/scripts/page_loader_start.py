@@ -1,21 +1,11 @@
-import argparse
-import os
+from page_loader.cli import parse_cli_args
 from page_loader.page_loader import download
 import logging
 import sys
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description='Downloads webpage via URL.'
-    )
-    current_directory = os.getcwd()
-    parser.add_argument('-o', '--output',
-                        help='path to save the page',
-                        default=current_directory)
-    parser.add_argument('url')
-
-    args = parser.parse_args()
+    args = parse_cli_args()
     output = args.output
     url = args.url
 
