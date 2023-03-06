@@ -6,14 +6,17 @@ import requests_mock
 from page_loader.page_loader import download
 
 
+TESTS_DIR: str = os.path.dirname(os.path.abspath(__file__))
+FIXTURES_PATH: str = f'{TESTS_DIR}/fixtures'
+
+
 def read_file(file_path: str, read_mode: str) -> bytes | str:
     with open(file_path, read_mode) as file:
         return file.read()
 
 
 def get_fixture_path(file_name: str) -> str:
-    fixtures_path: str = 'page_loader/tests/fixtures/'
-    return os.path.join(fixtures_path, file_name)
+    return os.path.join(FIXTURES_PATH, file_name)
 
 
 @pytest.mark.parametrize(
